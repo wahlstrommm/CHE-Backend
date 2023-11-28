@@ -9,6 +9,7 @@ var usersRouter = require("./routes/users");
 var openingRoutines = require("./routes/opening-routines");
 var closingRoutines = require("./routes/closing-routines");
 var summaryRoutines = require("./routes/summary-routines");
+var weeklyRoutines = require("./routes/weekly-routines");
 var uploadRoute = require("./routes/upload");
 
 var app = express();
