@@ -43,7 +43,7 @@
       "id" : 5,
       "Viktigt": "Transition code base to ES6",
       "Klockan" : "Mon Aug 01 10:00:00 +0000 2015",
-      "Tags": [
+      "Rutiner": [
         "ES6",
         "Web Development"
       ],
