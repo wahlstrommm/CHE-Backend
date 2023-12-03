@@ -11,6 +11,7 @@ var closingRoutines = require("./routes/closing-routines");
 var summaryRoutines = require("./routes/summary-routines");
 var weeklyRoutines = require("./routes/weekly-routines");
 var uploadRoute = require("./routes/upload");
+var specialRoute = require("./routes/special-routines");
 
 var app = express();
 var cors = require("cors");
