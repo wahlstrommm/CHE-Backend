@@ -52,6 +52,12 @@ router.post(
   function (req, res, next) {
     var filen = req.body;
     var today = new Date();
+
+    var fileName = today.toISOString().split("T")[0] + "-special" + ".json";
+
+    // Ange sökvägen till mappen "opening"
+    var specialFolderPath = path.join(__dirname, "..", "routines", "special");
+    var specialFilePath = path.join(specialFolderPath, fileName);
   })
 );
 module.exports = router;
