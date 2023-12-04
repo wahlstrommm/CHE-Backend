@@ -21,6 +21,27 @@ router.get(
         res.status(500).json({ error: "Failed to parse file content" });
       }
     } else {
+      var templateFilePath = path.join(
+        __dirname,
+        "..",
+        "routines",
+        "template",
+        fileName
+      );
+      console.log(templateFilePath);
+      if (fs.existsSync(templateFilePath)) {
+        var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
+        try {
+          // Försök att konvertera filens innehåll till ett JSON-objekt
+          var templateJsonData = JSON.parse(templateFileContent);
+          res.json(templateJsonData);
+        } catch (error) {
+          console.log("Error parsing template file content", error);
+          res
+            .status(500)
+            .json({ error: "Failed to parse template file content" });
+        }
+      }
     }
   })
 );
