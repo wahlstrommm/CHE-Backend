@@ -58,6 +58,33 @@ router.post(
     // Ange sökvägen till mappen "opening"
     var specialFolderPath = path.join(__dirname, "..", "routines", "special");
     var specialFilePath = path.join(specialFolderPath, fileName);
+
+    var existingData = fs.readFileSync(openingFilePath, "utf-8");
+
+    try {
+      // Försök att konvertera den befintliga datan till ett JSON-objekt
+      var existingJson = JSON.parse(existingData);
+
+      // Lägg till den nya informationen till den befintliga datan
+      Object.assign(existingJson, fillen);
+
+      // Konvertera tillbaka till JSON-sträng
+      const updatedJsonString = JSON.stringify(existingJson);
+
+      // Skriv till filen i "opening"
+      fs.writeFile(specialFilePath, updatedJsonString, (err) => {
+        if (err) {
+          console.log("Error updating file", err);
+          res.status(500).json({ error: "Failed to update file" });
+        } else {
+          console.log("Successfully updated file:", specialFilePath);
+          res.status(200).json({ success: true });
+        }
+      });
+    } catch (error) {
+      console.log("Error parsing existing file data", error);
+      res.status(500).json({ error: "Failed to parse existing file data" });
+    }
   })
 );
 module.exports = router;
