@@ -41,6 +41,8 @@ router.get(
             .status(500)
             .json({ error: "Failed to parse template file content" });
         }
+      } else {
+        res.json(require("../special.json"));
       }
     }
   })
