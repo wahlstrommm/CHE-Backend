@@ -60,30 +60,39 @@ router.post(
     var specialFilePath = path.join(specialFolderPath, fileName);
 
     var existingData = fs.readFileSync(openingFilePath, "utf-8");
+    if (fs.existsSync(specialFilePath)) {
+      try {
+        // Försök att konvertera den befintliga datan till ett JSON-objekt
+        var existingJson = JSON.parse(existingData);
 
-    try {
-      // Försök att konvertera den befintliga datan till ett JSON-objekt
-      var existingJson = JSON.parse(existingData);
+        // Lägg till den nya informationen till den befintliga datan
+        Object.assign(existingJson, fillen);
 
-      // Lägg till den nya informationen till den befintliga datan
-      Object.assign(existingJson, fillen);
+        // Konvertera tillbaka till JSON-sträng
+        const updatedJsonString = JSON.stringify(existingJson);
 
-      // Konvertera tillbaka till JSON-sträng
-      const updatedJsonString = JSON.stringify(existingJson);
-
-      // Skriv till filen i "opening"
-      fs.writeFile(specialFilePath, updatedJsonString, (err) => {
-        if (err) {
-          console.log("Error updating file", err);
-          res.status(500).json({ error: "Failed to update file" });
-        } else {
-          console.log("Successfully updated file:", specialFilePath);
-          res.status(200).json({ success: true });
-        }
-      });
-    } catch (error) {
-      console.log("Error parsing existing file data", error);
-      res.status(500).json({ error: "Failed to parse existing file data" });
+        // Skriv till filen i "opening"
+        fs.writeFile(specialFilePath, updatedJsonString, (err) => {
+          if (err) {
+            console.log("Error updating file", err);
+            res.status(500).json({ error: "Failed to update file" });
+          } else {
+            console.log("Successfully updated file:", specialFilePath);
+            res.status(200).json({ success: true });
+          }
+        });
+      } catch (error) {
+        console.log("Error parsing existing file data", error);
+        res.status(500).json({ error: "Failed to parse existing file data" });
+      }
+    } else {
+      var templateFilePath = path.join(
+        __dirname,
+        "..",
+        "routines",
+        "template",
+        fileName
+      );
     }
   })
 );
