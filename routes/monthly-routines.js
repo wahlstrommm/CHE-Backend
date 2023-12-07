@@ -17,6 +17,11 @@ router.get(
       var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
 
       try {
+        // Försök att konvertera den befintliga datan till ett JSON-objekt
+        var existingJson = JSON.parse(existingData);
+
+        // Lägg till den nya informationen till den befintliga datan
+        Object.assign(existingJson, fillen);
       } catch (error) {}
     } else {
     }
