@@ -12,6 +12,11 @@ router.get(
     // Ange sökvägen till mappen "Monthly"
     var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
     var monthlyFilePath = path.join(weeklyFolderPath, fileName);
+
+    if (fs.existsSync(monthlyFilePath)) {
+      var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
+    } else {
+    }
   })
 );
 
