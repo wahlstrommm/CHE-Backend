@@ -15,6 +15,9 @@ router.get(
 
     if (fs.existsSync(monthlyFilePath)) {
       var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
+
+      try {
+      } catch (error) {}
     } else {
     }
   })
