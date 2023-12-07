@@ -3,6 +3,17 @@ var router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
-router.get(("/", function (req, res, next) {}));
+router.get(
+  ("/",
+  function (req, res, next) {
+    var today = new Date();
+    var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+
+    // Ange sökvägen till mappen "Monthly"
+    var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
+    var monthlyFilePath = path.join(weeklyFolderPath, fileName);
+  })
+);
+
 router.post(("/", function (req, res, next) {}));
 module.exports = router;
