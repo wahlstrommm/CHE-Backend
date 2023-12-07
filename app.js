@@ -36,7 +36,7 @@ app.use("/summary", summaryRoutines);
 app.use("/upload", uploadRoute);
 app.use("/weekly-routines", weeklyRoutines);
 app.use("special-routines", specialRoute);
-
+app.use("monthly-routines", monthlyRoute);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
