@@ -7,7 +7,8 @@ router.get(
   ("/",
   function (req, res, next) {
     var today = new Date();
-    var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+    var fileName =
+      today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
 
     // Ange sökvägen till mappen "Monthly"
     var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
