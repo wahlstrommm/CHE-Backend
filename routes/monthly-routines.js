@@ -83,6 +83,14 @@ router.post(
         console.log("Error parsing existing file data", error);
         res.status(500).json({ error: "Failed to parse existing file data" });
       }
+    } else {
+      var templateFilePath = path.join(
+        __dirname,
+        "..",
+        "routines",
+        "template",
+        fileName
+      );
     }
   })
 );
