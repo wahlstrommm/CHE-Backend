@@ -14,15 +14,16 @@ router.get(
     var monthlyFilePath = path.join(weeklyFolderPath, fileName);
 
     if (fs.existsSync(monthlyFilePath)) {
-      var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
+      var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
 
       try {
-        // Försök att konvertera den befintliga datan till ett JSON-objekt
-        var existingJson = JSON.parse(existingData);
-
+        var jsonData = JSON.parse(fileContent);
+        res.json(jsonData);
         // Lägg till den nya informationen till den befintliga datan
-        Object.assign(existingJson, fillen);
-      } catch (error) {}
+      } catch (error) {
+        console.log("Error parsing file content", error);
+        res.status(500).json({ error: "Failed to parse file content" });
+      }
     } else {
     }
   })
