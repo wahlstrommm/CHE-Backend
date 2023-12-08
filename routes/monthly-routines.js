@@ -56,6 +56,9 @@ router.post(
   function (req, res, next) {
     var filen = req.body;
     var today = new Date();
+
+    var fileName =
+      today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
   })
 );
 module.exports = router;
