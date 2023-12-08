@@ -62,6 +62,10 @@ router.post(
 
     var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
     var monthlyFilePath = path.join(monthlyFolderPath, fileName);
+
+    var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
+    if (fs.existsSync(monthlyFilePath)) {
+    }
   })
 );
 module.exports = router;
