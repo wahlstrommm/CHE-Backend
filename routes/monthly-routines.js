@@ -65,6 +65,24 @@ router.post(
 
     var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
     if (fs.existsSync(monthlyFilePath)) {
+      try {
+        var existingJson = JSON.parse(existingData);
+        Object.assign(existingJson, fillen);
+        const updatedJsonString = JSON.stringify(existingJson);
+
+        fs.writeFile(monthlyFilePath, updatedJsonString, (err) => {
+          if (err) {
+            console.log("Error updating file", err);
+            res.status(500).json({ error: "Failed to update file" });
+          } else {
+            console.log("Successfully updated file:", specialFilePath);
+            res.status(200).json({ success: true });
+          }
+        });
+      } catch (error) {
+        console.log("Error parsing existing file data", error);
+        res.status(500).json({ error: "Failed to parse existing file data" });
+      }
     }
   })
 );
