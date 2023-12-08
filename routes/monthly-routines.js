@@ -59,6 +59,9 @@ router.post(
 
     var fileName =
       today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
+
+    var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
+    var monthlyFilePath = path.join(monthlyFolderPath, fileName);
   })
 );
 module.exports = router;
