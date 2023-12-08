@@ -25,6 +25,14 @@ router.get(
         res.status(500).json({ error: "Failed to parse file content" });
       }
     } else {
+      var templateFilePath = path.join(
+        __dirname,
+        "..",
+        "routines",
+        "template",
+        fileName
+      );
+      console.log(templateFilePath);
     }
   })
 );
