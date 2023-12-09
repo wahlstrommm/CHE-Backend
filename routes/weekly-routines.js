@@ -62,5 +62,18 @@ function getWeek(date) {
   return weekNumber;
 }
 
-router.post(("/", function (req, res, next) {}));
+router.post(
+  ("/",
+  function (req, res, next) {
+    var today = new Date();
+    var weekNumber = getWeek(today);
+
+    // Använd veckonumret i filnamnet
+    var fileName =
+      today.toISOString().split("T")[0].slice(0, 7) +
+      "-weekly-" +
+      weekNumber +
+      ".json";
+  })
+);
 module.exports = router;
