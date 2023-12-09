@@ -3,6 +3,15 @@ var router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
+function getWeek(date) {
+  var d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  var yearStart = new Date(d.getFullYear(), 0, 1);
+  var weekNumber = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  return weekNumber;
+}
+
 router.get("/", function (req, res, next) {
   var today = new Date();
   var fileName = today.toISOString().split("T")[0] + "-weekly" + ".json";
@@ -52,15 +61,6 @@ router.get("/", function (req, res, next) {
     }
   }
 });
-
-function getWeek(date) {
-  var d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-  var yearStart = new Date(d.getFullYear(), 0, 1);
-  var weekNumber = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
-  return weekNumber;
-}
 
 router.post(
   ("/",
