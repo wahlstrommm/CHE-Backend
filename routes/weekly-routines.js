@@ -18,6 +18,12 @@ function getWeeklyFilePath(date) {
   return path.join(__dirname, "..", "routines", "weekly", fileName);
 }
 
+function getTemplateFilePath(date) {
+  var fileName =
+    date.toISOString().split("T")[0] + "-weekly-" + getWeek(date) + ".json";
+  return path.join(__dirname, "..", "routines", "template", fileName);
+}
+
 router.get("/", function (req, res, next) {
   var today = new Date();
   var fileName = today.toISOString().split("T")[0] + "-weekly" + ".json";
