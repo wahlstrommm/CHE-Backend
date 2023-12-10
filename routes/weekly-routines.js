@@ -28,7 +28,12 @@ router.post("/", function (req, res, next) {
   var today = new Date();
   var weeklyFilePath = getWeeklyFilePath(today);
   if (fs.existsSync(weeklyFilePath)) {
-    fs.readFile(weeklyFilePath, "utf-8", (err, data) => {});
+    fs.readFile(weeklyFilePath, "utf-8", (err, data) => {
+      if (err) {
+        console.log("Error reading weekly file", err);
+        res.status(500).json({ error: "Failed to read weekly file" });
+      }
+    });
   }
 });
 
