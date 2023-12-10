@@ -12,6 +12,14 @@ function readJSONFile(filePath) {
     return null;
   }
 }
+function writeJSONFile(filePath, data) {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    console.log(`Data written to ${filePath}`);
+  } catch (error) {
+    console.error(`Error writing to JSON file ${filePath}: ${error.message}`);
+  }
+}
 
 router.get("/", function (req, res, next) {
   // Ange sökvägarna till mapparna "opening", "closing", och "summary"
