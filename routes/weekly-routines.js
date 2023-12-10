@@ -21,7 +21,7 @@ function getWeeklyFilePath(date) {
 function getTemplateFilePath(date) {
   var fileName =
     date.toISOString().split("T")[0] + "-weekly-" + getWeek(date) + ".json";
-  return path.join(__dirname, "..", "routines", "template", fileName);
+  return path.join(__dirname, "..", "routines", "template", "weekly.json");
 }
 
 router.post("/", function (req, res, next) {
@@ -53,7 +53,7 @@ router.post("/", function (req, res, next) {
       }
     });
   } else {
-    var templateFilePath = getTemplateFilePath(today);
+    var templateFilePath = getTemplateFilePath();
 
     if (fs.existsSync(templateFilePath)) {
       fs.readFile(templateFilePath, "utf-8", (err, templateData) => {
@@ -79,15 +79,7 @@ router.post("/", function (req, res, next) {
         }
       });
     } else {
-      fs.writeFile(weeklyFilePath, templateData, (err) => {
-        if (err) {
-          console.log("Error creating weekly file", err);
-          res.status(500).json({ error: "Failed to create weekly file" });
-        } else {
-          console.log("Successfully created weekly file:", weeklyFilePath);
-          res.status(200).json({ success: true });
-        }
-      });
+      res.status(500).json({ error: "Template file not found" });
     }
   }
 });
