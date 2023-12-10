@@ -34,6 +34,12 @@ router.post("/", function (req, res, next) {
         res.status(500).json({ error: "Failed to read weekly file" });
       } else {
         try {
+          var existingJson = JSON.parse(data);
+          fs.writeFile(
+            weeklyFilePath,
+            JSON.stringify(existingJson),
+            (err) => {}
+          );
         } catch (error) {}
       }
     });
