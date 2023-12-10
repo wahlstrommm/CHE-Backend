@@ -18,6 +18,7 @@ router.get("/", function (req, res, next) {
     try {
       // Försök att konvertera filens innehåll till ett JSON-objekt
       var jsonData = JSON.parse(fileContent);
+      console.log(jsonData);
       res.json(jsonData);
     } catch (error) {
       console.log("Error parsing file content", error);
@@ -54,8 +55,8 @@ router.get("/", function (req, res, next) {
 });
 
 router.post("/", function (req, res, next) {
-  var updatedRoutines = req.body.routines;
-
+  var updatedRoutines = req.body;
+  console.log(req.body);
   // Skapa ett Date-objekt för dagens datum
   var today = new Date();
 
