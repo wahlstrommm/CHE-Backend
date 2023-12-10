@@ -79,6 +79,15 @@ router.post("/", function (req, res, next) {
         }
       });
     } else {
+      fs.writeFile(weeklyFilePath, templateData, (err) => {
+        if (err) {
+          console.log("Error creating weekly file", err);
+          res.status(500).json({ error: "Failed to create weekly file" });
+        } else {
+          console.log("Successfully created weekly file:", weeklyFilePath);
+          res.status(200).json({ success: true });
+        }
+      });
     }
   }
 });
