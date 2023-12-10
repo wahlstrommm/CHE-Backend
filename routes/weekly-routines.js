@@ -35,11 +35,15 @@ router.post("/", function (req, res, next) {
       } else {
         try {
           var existingJson = JSON.parse(data);
-          fs.writeFile(
-            weeklyFilePath,
-            JSON.stringify(existingJson),
-            (err) => {}
-          );
+          fs.writeFile(weeklyFilePath, JSON.stringify(existingJson), (err) => {
+            if (err) {
+              console.log("Error updating weekly file", err);
+              res.status(500).json({ error: "Failed to update weekly file" });
+            } else {
+              console.log("Successfully updated weekly file:", weeklyFilePath);
+              res.status(200).json({ success: true });
+            }
+          });
         } catch (error) {}
       }
     });
