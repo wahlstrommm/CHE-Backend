@@ -1,17 +1,17 @@
 [
     {
       "id" : 1,
-      "Viktigt": "Learn about Polymer",
-      "Klockan": "Mon Apr 26 06:01:55 +0000 2015",
+      "Viktigt": "Learn about",
+      "Klockan": "Mon Apr 21 06:01:55 +0000 2015",
       "Tags": [
-        "Web Development",
-        "Web Components"
+        "Web ss",
+        "Web ccc"
       ],
       "Done" : true
     },
     {
       "id" : 2,
-      "Viktigt" : "Watch Pluralsight course on Docker",
+      "Viktigt" : "Course on Docker",
       "Klockan" : "Tue Mar 02 07:01:55 +0000 2015",
       "Tags": [
         "Devops",
@@ -21,7 +21,7 @@
     },
     {
       "id" : 3,
-      "Viktigt" : "Complete presentation prep for Aurelia presentation",
+      "Viktigt" : "Aurelia presentation",
       "Klockan" : "Wed Mar 05 10:01:55 +0000 2015",
       "Tags": [
         "Presentation",
@@ -31,7 +31,7 @@
     },
     {
       "id" : 4,
-      "Viktigt": "Instrument creation of development environment with Puppet",
+      "Viktigt": "Puppet",
       "Klockan" : "Fri June 30 13:00:00 +0000 2015",
       "Tags": [
         "Devops",
@@ -41,7 +41,7 @@
     },
     {
       "id" : 5,
-      "Viktigt": "Transition code base to ES6",
+      "Viktigt": "ES6",
       "Klockan" : "Mon Aug 01 10:00:00 +0000 2015",
       "Tags": [
         "hej"
