@@ -46,6 +46,9 @@ router.post("/", function (req, res, next) {
           });
         } catch (error) {
           console.log("Error parsing weekly file content", error);
+          res
+            .status(500)
+            .json({ error: "Failed to parse weekly file content" });
         }
       }
     });
