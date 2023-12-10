@@ -56,6 +56,29 @@ router.post("/", function (req, res, next) {
     var templateFilePath = getTemplateFilePath(today);
 
     if (fs.existsSync(templateFilePath)) {
+      fs.readFile(templateFilePath, "utf-8", (err, templateData) => {
+        if (err) {
+          console.log("Error reading template file", err);
+          res.status(500).json({ error: "Failed to read template file" });
+        } else {
+          // Skriv innehållet från template till weekly
+          fs.writeFile(weeklyFilePath, templateData, (err) => {
+            if (err) {
+              console.log("Error copying template to weekly", err);
+              res
+                .status(500)
+                .json({ error: "Failed to copy template to weekly" });
+            } else {
+              console.log(
+                "Successfully copied template to weekly:",
+                weeklyFilePath
+              );
+              res.status(200).json({ success: true });
+            }
+          });
+        }
+      });
+    } else {
     }
   }
 });
