@@ -50,6 +50,29 @@ function groupRoutinesByMonthAndWeek(routines) {
   return groupedData;
 }
 
+// Funktion för att generera statistik från grupperade data
+function generateStatistics(groupedData) {
+  var statistics = {};
+
+  // Loopa igenom varje grupp (månad och vecka)
+  for (var key in groupedData) {
+    var routinesInGroup = groupedData[key];
+    var totalRoutines = routinesInGroup.length;
+    var completedRoutines = routinesInGroup.filter(
+      (routine) => routine.Done
+    ).length;
+
+    // Skapa statistik för varje grupp
+    statistics[key] = {
+      totalRoutines: totalRoutines,
+      completedRoutines: completedRoutines,
+      completionRate: (completedRoutines / totalRoutines) * 100,
+    };
+  }
+
+  return statistics;
+}
+
 router.get("/", function (req, res, next) {
   // Ange sökvägarna till mapparna "opening", "closing", och "summary"
   var openingFolderPath = path.join(__dirname, "..", "routines", "opening");
