@@ -90,6 +90,7 @@ router.get("/", async function (req, res, next) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+module.exports = router;
 
 /*
 router.get("/", function (req, res, next) {
