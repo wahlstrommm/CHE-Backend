@@ -32,6 +32,9 @@ router.post("/", function (req, res, next) {
       if (err) {
         console.log("Error reading weekly file", err);
         res.status(500).json({ error: "Failed to read weekly file" });
+      } else {
+        try {
+        } catch (error) {}
       }
     });
   }
