@@ -21,6 +21,35 @@ function writeJSONFile(filePath, data) {
   }
 }
 
+// Funktion för att gruppera rutiner efter månad och vecka
+function groupRoutinesByMonthAndWeek(routines) {
+  // Skapa ett objekt för att hålla den grupperade informationen
+  var groupedData = {};
+
+  routines.forEach(function (routine) {
+    // Extrahera månad och vecka från rutinens klockslag
+    var month = new Date(routine.Klockan).toLocaleString("en-US", {
+      month: "long",
+    });
+    var week = new Date(routine.Klockan).toLocaleString("en-US", {
+      week: "numeric",
+    });
+
+    // Skapa en nyckel för grupperingen baserat på månad och vecka
+    var key = `${month} - Week ${week}`;
+
+    // Om nyckeln inte finns, skapa den
+    if (!groupedData[key]) {
+      groupedData[key] = [];
+    }
+
+    // Lägg till rutinen i rätt grupp
+    groupedData[key].push(routine);
+  });
+
+  return groupedData;
+}
+
 router.get("/", function (req, res, next) {
   // Ange sökvägarna till mapparna "opening", "closing", och "summary"
   var openingFolderPath = path.join(__dirname, "..", "routines", "opening");
