@@ -28,6 +28,7 @@ router.post("/", function (req, res, next) {
   var today = new Date();
   var weeklyFilePath = getWeeklyFilePath(today);
   if (fs.existsSync(weeklyFilePath)) {
+    fs.readFile(weeklyFilePath, "utf-8", (err, data) => {});
   }
 });
 
