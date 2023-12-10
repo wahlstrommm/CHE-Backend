@@ -89,25 +89,35 @@ router.get("/", function (req, res, next) {
     var openingFiles = fs.readdirSync(openingFolderPath);
     var closingFiles = fs.readdirSync(closingFolderPath);
 
-    // Loopa igenom och kopiera filerna till "summary"-mappen
-    openingFiles.forEach(function (file) {
-      var sourcePath = path.join(openingFolderPath, file);
-      var destinationPath = path.join(summaryFolderPath, file);
-      fs.copyFileSync(sourcePath, destinationPath);
-    });
+    // Läs alla rutiner från "opening" och "closing"
+    var openingRoutines = openingFiles.map((file) =>
+      readJSONFile(path.join(openingFolderPath, file))
+    );
+    var closingRoutines = closingFiles.map((file) =>
+      readJSONFile(path.join(closingFolderPath, file))
+    );
 
-    closingFiles.forEach(function (file) {
-      var sourcePath = path.join(closingFolderPath, file);
-      var destinationPath = path.join(summaryFolderPath, file);
-      fs.copyFileSync(sourcePath, destinationPath);
-    });
+    // Kombinera alla rutiner
+    var allRoutines = openingRoutines.concat(closingRoutines);
 
-    res.json({ success: true, message: "Routines copied to summary folder" });
+    // Gruppera rutiner efter månad och vecka
+    var groupedData = groupRoutinesByMonthAndWeek(allRoutines);
+
+    // Generera statistik från grupperade data
+    var statistics = generateStatistics(groupedData);
+
+    // Skriv statistiken till en JSON-fil
+    var statisticsFilePath = path.join(summaryFolderPath, "statistics.json");
+    writeJSONFile(statisticsFilePath, statistics);
+
+    res.json({
+      success: true,
+      message: "Routines copied to summary folder",
+      statistics: statistics,
+    });
   } catch (error) {
-    console.log("Error copying routines to summary folder", error);
-    res
-      .status(500)
-      .json({ error: "Failed to copy routines to summary folder" });
+    console.log("Error processing routines", error);
+    res.status(500).json({ error: "Failed to process routines" });
   }
 });
 
