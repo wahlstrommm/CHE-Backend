@@ -74,9 +74,12 @@ function generateStatistics(groupedData) {
 }
 
 router.get("/", function (req, res, next) {
-  // Ange sökvägarna till mapparna "opening", "closing", och "summary"
+  // Ange sökvägarna till mapparna "opening", "closing", "special", "weekly", "monthly" och "summary"
   var openingFolderPath = path.join(__dirname, "..", "routines", "opening");
   var closingFolderPath = path.join(__dirname, "..", "routines", "closing");
+  var specialFolderPath = path.join(__dirname, "..", "routines", "special");
+  var weeklyFolderPath = path.join(__dirname, "..", "routines", "weekly");
+  var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
   var summaryFolderPath = path.join(__dirname, "..", "routines", "summary");
 
   // Skapa "summary"-mappen om den inte redan finns
@@ -85,20 +88,36 @@ router.get("/", function (req, res, next) {
   }
 
   try {
-    // Hämta alla filnamn från "opening" och "closing"
+    // Hämta alla filnamn från olika mappar
     var openingFiles = fs.readdirSync(openingFolderPath);
     var closingFiles = fs.readdirSync(closingFolderPath);
+    var specialFiles = fs.readdirSync(specialFolderPath);
+    var weeklyFiles = fs.readdirSync(weeklyFolderPath);
+    var monthlyFiles = fs.readdirSync(monthlyFolderPath);
 
-    // Läs alla rutiner från "opening" och "closing"
+    // Läs alla rutiner från olika mappar
     var openingRoutines = openingFiles.map((file) =>
       readJSONFile(path.join(openingFolderPath, file))
     );
     var closingRoutines = closingFiles.map((file) =>
       readJSONFile(path.join(closingFolderPath, file))
     );
+    var specialRoutines = specialFiles.map((file) =>
+      readJSONFile(path.join(specialFolderPath, file))
+    );
+    var weeklyRoutines = weeklyFiles.map((file) =>
+      readJSONFile(path.join(weeklyFolderPath, file))
+    );
+    var monthlyRoutines = monthlyFiles.map((file) =>
+      readJSONFile(path.join(monthlyFolderPath, file))
+    );
 
     // Kombinera alla rutiner
-    var allRoutines = openingRoutines.concat(closingRoutines);
+    var allRoutines = openingRoutines
+      .concat(closingRoutines)
+      .concat(specialRoutines)
+      .concat(weeklyRoutines)
+      .concat(monthlyRoutines);
 
     // Gruppera rutiner efter månad och vecka
     var groupedData = groupRoutinesByMonthAndWeek(allRoutines);
@@ -112,7 +131,7 @@ router.get("/", function (req, res, next) {
 
     res.json({
       success: true,
-      message: "Routines copied to summary folder",
+      message: "Routines processed successfully",
       statistics: statistics,
     });
   } catch (error) {
