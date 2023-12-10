@@ -24,7 +24,12 @@ function getTemplateFilePath(date) {
   return path.join(__dirname, "..", "routines", "template", fileName);
 }
 
-router.post("/", function (req, res, next) {});
+router.post("/", function (req, res, next) {
+  var today = new Date();
+  var weeklyFilePath = getWeeklyFilePath(today);
+  if (fs.existsSync(weeklyFilePath)) {
+  }
+});
 
 router.get("/", function (req, res, next) {
   var today = new Date();
