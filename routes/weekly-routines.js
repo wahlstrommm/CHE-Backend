@@ -53,6 +53,10 @@ router.post("/", function (req, res, next) {
       }
     });
   } else {
+    var templateFilePath = getTemplateFilePath(today);
+
+    if (fs.existsSync(templateFilePath)) {
+    }
   }
 });
 
