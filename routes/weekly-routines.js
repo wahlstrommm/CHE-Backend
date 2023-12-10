@@ -27,6 +27,44 @@ function getTemplateFilePath(date) {
   return path.join(__dirname, "..", "routines", "template", "weekly.json");
 }
 
+function readDataFromFilePath(filePath, res, today) {
+  if (fs.existsSync(filePath)) {
+    var fileContent = fs.readFileSync(filePath, "utf-8");
+
+    try {
+      var jsonData = JSON.parse(fileContent);
+      // Uppdatera minnet med den senaste informationen
+      latestWeeklyData = jsonData;
+      res.json(jsonData);
+    } catch (error) {
+      console.log("Error parsing file content", error);
+      res.status(500).json({ error: "Failed to parse file content" });
+    }
+  } else {
+    // Om filen inte finns, läs från "template"
+    var templateFilePath = getTemplateFilePath(today);
+
+    if (fs.existsSync(templateFilePath)) {
+      var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
+
+      try {
+        var templateJsonData = JSON.parse(templateFileContent);
+        // Uppdatera minnet med den senaste informationen
+        latestWeeklyData = templateJsonData;
+        res.json(templateJsonData);
+      } catch (error) {
+        console.log("Error parsing template file content", error);
+        res
+          .status(500)
+          .json({ error: "Failed to parse template file content" });
+      }
+    } else {
+      // Om template-filen inte finns, returnera ett fel
+      res.status(500).json({ error: "Template file not found" });
+    }
+  }
+}
+
 router.post("/", function (req, res, next) {
   var today = new Date();
   var weeklyFilePath = getWeeklyFilePath(today);
