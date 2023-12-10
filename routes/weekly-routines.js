@@ -127,6 +127,22 @@ router.get("/", function (req, res, next) {
         "template",
         "weekly.json"
       );
+      if (fs.existsSync(templateFilePath)) {
+        var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
+        try {
+          var templateJsonData = JSON.parse(templateFileContent);
+          // Uppdatera minnet med den senaste informationen
+          latestWeeklyData = templateJsonData;
+          res.json(templateJsonData);
+        } catch (error) {
+          console.log("Error parsing template file content", error);
+          res
+            .status(500)
+            .json({ error: "Failed to parse template file content" });
+        }
+      } else {
+        res.status(500).json({ error: "Template file not found" });
+      }
     }
   }
 
