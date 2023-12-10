@@ -54,7 +54,7 @@ router.get("/", function (req, res, next) {
 });
 
 router.post("/", function (req, res, next) {
-  var fillen = req.body;
+  var updatedRoutines = req.body.routines;
 
   // Skapa ett Date-objekt för dagens datum
   var today = new Date();
@@ -68,33 +68,19 @@ router.post("/", function (req, res, next) {
 
   // Kontrollera om filen redan finns i "opening"
   if (fs.existsSync(openingFilePath)) {
-    // Läs in den befintliga filens data i "opening"
-    var existingData = fs.readFileSync(openingFilePath, "utf-8");
+    // Konvertera tillbaka till JSON-sträng
+    const updatedJsonString = JSON.stringify({ Rutiner: updatedRoutines });
 
-    try {
-      // Försök att konvertera den befintliga datan till ett JSON-objekt
-      var existingJson = JSON.parse(existingData);
-
-      // Lägg till den nya informationen till den befintliga datan
-      Object.assign(existingJson, fillen);
-
-      // Konvertera tillbaka till JSON-sträng
-      const updatedJsonString = JSON.stringify(existingJson);
-
-      // Skriv till filen i "opening"
-      fs.writeFile(openingFilePath, updatedJsonString, (err) => {
-        if (err) {
-          console.log("Error updating file", err);
-          res.status(500).json({ error: "Failed to update file" });
-        } else {
-          console.log("Successfully updated file:", openingFilePath);
-          res.status(200).json({ success: true });
-        }
-      });
-    } catch (error) {
-      console.log("Error parsing existing file data", error);
-      res.status(500).json({ error: "Failed to parse existing file data" });
-    }
+    // Skriv till filen i "opening"
+    fs.writeFile(openingFilePath, updatedJsonString, (err) => {
+      if (err) {
+        console.log("Error updating file", err);
+        res.status(500).json({ error: "Failed to update file" });
+      } else {
+        console.log("Successfully updated file:", openingFilePath);
+        res.status(200).json({ success: true });
+      }
+    });
   } else {
     // Filen finns inte i "opening", så kolla i "template"
     var templateFilePath = path.join(
@@ -114,7 +100,7 @@ router.post("/", function (req, res, next) {
         var templateExistingJson = JSON.parse(templateExistingData);
 
         // Lägg till den nya informationen till den befintliga datan
-        Object.assign(templateExistingJson, fillen);
+        Object.assign(templateExistingJson, { Rutiner: updatedRoutines });
 
         // Konvertera tillbaka till JSON-sträng
         const templateUpdatedJsonString = JSON.stringify(templateExistingJson);
@@ -123,7 +109,9 @@ router.post("/", function (req, res, next) {
         fs.writeFile(templateFilePath, templateUpdatedJsonString, (err) => {
           if (err) {
             console.log("Error updating template file", err);
-            res.status(500).json({ error: "Failed to update template file" });
+            res.status(500).json({
+              error: "Failed to update template file",
+            });
           } else {
             console.log(
               "Successfully updated template file:",
@@ -134,13 +122,13 @@ router.post("/", function (req, res, next) {
         });
       } catch (error) {
         console.log("Error parsing template existing file data", error);
-        res
-          .status(500)
-          .json({ error: "Failed to parse template existing file data" });
+        res.status(500).json({
+          error: "Failed to parse template existing file data",
+        });
       }
     } else {
       // Filen finns inte i "template" heller, skapa en ny fil i "opening"
-      const jsonString = JSON.stringify(fillen);
+      const jsonString = JSON.stringify({ Rutiner: updatedRoutines });
       fs.writeFile(openingFilePath, jsonString, (err) => {
         if (err) {
           console.log("Error writing file", err);
