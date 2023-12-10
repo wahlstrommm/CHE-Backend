@@ -3,6 +3,9 @@ var router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
+// Håll den senaste weekly-informationen i minnet
+let latestWeeklyData = null;
+
 function getWeek(date) {
   var d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -101,7 +104,31 @@ router.post("/", function (req, res, next) {
 
 router.get("/", function (req, res, next) {
   var today = new Date();
-  var fileName = today.toISOString().split("T")[0] + "-weekly" + ".json";
+  var weeklyFilePath = getWeeklyFilePath(today);
+  if (latestWeeklyData) {
+    res.json(latestWeeklyData);
+  } else {
+    if (fs.existsSync(weeklyFilePath)) {
+      var fileContent = fs.readFileSync(weeklyFilePath, "utf-8");
+      try {
+        var jsonData = JSON.parse(fileContent);
+        // Uppdatera minnet med den senaste informationen
+        latestWeeklyData = jsonData;
+      } catch (error) {
+        console.log("Error parsing file content", error);
+        res.status(500).json({ error: "Failed to parse file content" });
+      }
+    } else {
+      // Filen för dagens datum och veckonummer finns inte, hämta från "template"
+      var templateFilePath = path.join(
+        __dirname,
+        "..",
+        "routines",
+        "template",
+        "weekly.json"
+      );
+    }
+  }
 
   // Ange sökvägen till mappen "weekly"
   var weeklyFolderPath = path.join(__dirname, "..", "routines", "weekly");
