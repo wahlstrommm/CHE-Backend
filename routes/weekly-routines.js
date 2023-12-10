@@ -1,155 +1,93 @@
-var express = require("express");
-var router = express.Router();
-const fs = require("fs");
+const express = require("express");
+const router = express.Router();
+const fs = require("fs").promises;
 const path = require("path");
 
-// Håll den senaste weekly-informationen i minnet
 let latestWeeklyData = null;
 
 function getWeek(date) {
-  var d = new Date(date);
+  const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-  var yearStart = new Date(d.getFullYear(), 0, 1);
-  var weekNumber = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const weekNumber = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
   return weekNumber;
 }
 
 function getWeeklyFilePath(date) {
-  var fileName =
-    date.toISOString().split("T")[0] + "-weekly-" + getWeek(date) + ".json";
+  const fileName = `${date.toISOString().split("T")[0]}-weekly-${getWeek(
+    date
+  )}.json`;
   return path.join(__dirname, "..", "routines", "weekly", fileName);
 }
 
 function getTemplateFilePath(date) {
-  var fileName =
-    date.toISOString().split("T")[0] + "-weekly-" + getWeek(date) + ".json";
+  const fileName = `${date.toISOString().split("T")[0]}-weekly-${getWeek(
+    date
+  )}.json`;
   return path.join(__dirname, "..", "routines", "template", "weekly.json");
 }
 
-function readDataFromFilePath(filePath, res, today) {
-  if (fs.existsSync(filePath)) {
-    var fileContent = fs.readFileSync(filePath, "utf-8");
+async function readDataFromFilePath(filePath, res, today) {
+  try {
+    const fileContent = await fs.readFile(filePath, "utf-8");
 
-    try {
-      var jsonData = JSON.parse(fileContent);
-      // Uppdatera minnet med den senaste informationen
-      latestWeeklyData = jsonData;
-      res.json(jsonData);
-    } catch (error) {
-      console.log("Error parsing file content", error);
-      res.status(500).json({ error: "Failed to parse file content" });
-    }
-  } else {
-    // Om filen inte finns, läs från "template"
-    var templateFilePath = getTemplateFilePath(today);
-
-    if (fs.existsSync(templateFilePath)) {
-      var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
-
-      try {
-        var templateJsonData = JSON.parse(templateFileContent);
-        // Uppdatera minnet med den senaste informationen
-        latestWeeklyData = templateJsonData;
-        res.json(templateJsonData);
-      } catch (error) {
-        console.log("Error parsing template file content", error);
-        res
-          .status(500)
-          .json({ error: "Failed to parse template file content" });
-      }
-    } else {
-      // Om template-filen inte finns, returnera ett fel
-      res.status(500).json({ error: "Template file not found" });
-    }
+    const jsonData = JSON.parse(fileContent);
+    latestWeeklyData = jsonData;
+    res.json(jsonData);
+  } catch (error) {
+    console.log("Error parsing file content", error);
+    res.status(500).json({ error: "Failed to parse file content" });
   }
 }
 
-router.post("/", function (req, res, next) {
-  var today = new Date();
-  var weeklyFilePath = getWeeklyFilePath(today);
+router.post("/", async function (req, res, next) {
+  try {
+    const today = new Date();
+    const weeklyFilePath = getWeeklyFilePath(today);
 
-  if (fs.existsSync(weeklyFilePath)) {
-    fs.readFile(weeklyFilePath, "utf-8", (err, data) => {
-      if (err) {
-        console.log("Error reading weekly file", err);
-        res.status(500).json({ error: "Failed to read weekly file" });
-      } else {
-        try {
-          var existingJson = JSON.parse(data);
-          fs.writeFile(weeklyFilePath, JSON.stringify(existingJson), (err) => {
-            if (err) {
-              console.log("Error updating weekly file", err);
-              res.status(500).json({ error: "Failed to update weekly file" });
-            } else {
-              console.log("Successfully updated weekly file:", weeklyFilePath);
-              res.status(200).json({ success: true });
-            }
-          });
-        } catch (error) {
-          console.log("Error parsing weekly file content", error);
-          res
-            .status(500)
-            .json({ error: "Failed to parse weekly file content" });
-        }
-      }
-    });
-  } else {
-    var templateFilePath = getTemplateFilePath();
+    if (await fs.access(weeklyFilePath).catch(() => false)) {
+      const existingData = await fs.readFile(weeklyFilePath, "utf-8");
+      const existingJson = JSON.parse(existingData);
 
-    if (fs.existsSync(templateFilePath)) {
-      fs.readFile(templateFilePath, "utf-8", (err, templateData) => {
-        if (err) {
-          console.log("Error reading template file", err);
-          res.status(500).json({ error: "Failed to read template file" });
-        } else {
-          // Parsa mallens data som JSON
-          try {
-            var templateJson = JSON.parse(templateData);
+      Object.assign(existingJson, req.body);
 
-            // Skriv innehållet från template till weekly
-            fs.writeFile(
-              weeklyFilePath,
-              JSON.stringify(templateJson),
-              (err) => {
-                if (err) {
-                  console.log("Error copying template to weekly", err);
-                  res
-                    .status(500)
-                    .json({ error: "Failed to copy template to weekly" });
-                } else {
-                  console.log(
-                    "Successfully copied template to weekly:",
-                    weeklyFilePath
-                  );
-                  res.status(200).json({ success: true });
-                }
-              }
-            );
-          } catch (error) {
-            console.log("Error parsing template file content", error);
-            res
-              .status(500)
-              .json({ error: "Failed to parse template file content" });
-          }
-        }
-      });
+      await fs.writeFile(weeklyFilePath, JSON.stringify(existingJson));
+      console.log("Successfully updated weekly file:", weeklyFilePath);
+      res.status(200).json({ success: true });
     } else {
-      res.status(500).json({ error: "Template file not found" });
+      const templateFilePath = getTemplateFilePath();
+
+      if (await fs.access(templateFilePath).catch(() => false)) {
+        const templateData = await fs.readFile(templateFilePath, "utf-8");
+        const templateJson = JSON.parse(templateData);
+
+        await fs.writeFile(weeklyFilePath, JSON.stringify(templateJson));
+        console.log("Successfully copied template to weekly:", weeklyFilePath);
+        res.status(200).json({ success: true });
+      } else {
+        res.status(500).json({ error: "Template file not found" });
+      }
     }
+  } catch (error) {
+    console.log("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.get("/", function (req, res, next) {
-  var today = new Date();
-  var weeklyFilePath = getWeeklyFilePath(today);
+router.get("/", async function (req, res, next) {
+  try {
+    const today = new Date();
+    const weeklyFilePath = getWeeklyFilePath(today);
 
-  if (latestWeeklyData) {
-    // Om du har den senaste datan i minnet, returnera den direkt
-    res.json(latestWeeklyData);
-  } else {
-    // Annars försök läsa från veckofilen
-    readDataFromFilePath(weeklyFilePath, res, today);
+    if (latestWeeklyData) {
+      res.json(latestWeeklyData);
+    } else {
+      await readDataFromFilePath(weeklyFilePath, res, today);
+    }
+  } catch (error) {
+    console.log("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -221,5 +159,3 @@ router.post(
   })
 );
 */
-
-module.exports = router;
