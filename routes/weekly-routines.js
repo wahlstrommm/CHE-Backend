@@ -27,6 +27,7 @@ function getTemplateFilePath(date) {
 router.post("/", function (req, res, next) {
   var today = new Date();
   var weeklyFilePath = getWeeklyFilePath(today);
+
   if (fs.existsSync(weeklyFilePath)) {
     fs.readFile(weeklyFilePath, "utf-8", (err, data) => {
       if (err) {
@@ -61,21 +62,35 @@ router.post("/", function (req, res, next) {
           console.log("Error reading template file", err);
           res.status(500).json({ error: "Failed to read template file" });
         } else {
-          // Skriv innehållet från template till weekly
-          fs.writeFile(weeklyFilePath, templateData, (err) => {
-            if (err) {
-              console.log("Error copying template to weekly", err);
-              res
-                .status(500)
-                .json({ error: "Failed to copy template to weekly" });
-            } else {
-              console.log(
-                "Successfully copied template to weekly:",
-                weeklyFilePath
-              );
-              res.status(200).json({ success: true });
-            }
-          });
+          // Parsa mallens data som JSON
+          try {
+            var templateJson = JSON.parse(templateData);
+
+            // Skriv innehållet från template till weekly
+            fs.writeFile(
+              weeklyFilePath,
+              JSON.stringify(templateJson),
+              (err) => {
+                if (err) {
+                  console.log("Error copying template to weekly", err);
+                  res
+                    .status(500)
+                    .json({ error: "Failed to copy template to weekly" });
+                } else {
+                  console.log(
+                    "Successfully copied template to weekly:",
+                    weeklyFilePath
+                  );
+                  res.status(200).json({ success: true });
+                }
+              }
+            );
+          } catch (error) {
+            console.log("Error parsing template file content", error);
+            res
+              .status(500)
+              .json({ error: "Failed to parse template file content" });
+          }
         }
       });
     } else {
@@ -133,7 +148,7 @@ router.get("/", function (req, res, next) {
     }
   }
 });
-
+/* 
 router.post(
   ("/",
   function (req, res, next) {
@@ -148,4 +163,6 @@ router.post(
       ".json";
   })
 );
+*/
+
 module.exports = router;
