@@ -15,28 +15,42 @@ function getWeek(date) {
 }
 
 function getWeeklyFilePath(date) {
-  const fileName = `${date.toISOString().split("T")[0]}-weekly-${getWeek(
-    date
-  )}.json`;
+  const weekNumber = getWeek(date);
+  const fileName = `w-${weekNumber}.json`;
   return path.join(__dirname, "..", "routines", "weekly", fileName);
 }
 
-router.post("/", async function (req, res, next) {
+function getTemplateFilePath() {
+  return path.join(__dirname, "..", "routines", "template", "weekly.json");
+}
+
+async function readDataFromFilePath(filePath, res, today) {
+  try {
+    const fileContent = await fs.readFile(filePath, "utf-8");
+    const jsonData = JSON.parse(fileContent);
+    latestWeeklyData = jsonData;
+    res.json(jsonData);
+  } catch (error) {
+    console.log("Error parsing file content", error);
+    res.status(500).json({ error: "Failed to parse file content" });
+  }
+}
+
+router.get("/", async function (req, res, next) {
   try {
     const today = new Date();
     const weeklyFilePath = getWeeklyFilePath(today);
 
     if (await fs.access(weeklyFilePath).catch(() => false)) {
-      const existingData = await fs.readFile(weeklyFilePath, "utf-8");
-      const existingJson = JSON.parse(existingData);
-
-      Object.assign(existingJson, req.body);
-
-      await fs.writeFile(weeklyFilePath, JSON.stringify(existingJson));
-      console.log("Successfully updated weekly file:", weeklyFilePath);
-      res.status(200).json({ success: true });
+      const fileContent = await fs.readFile(weeklyFilePath, "utf-8");
+      const jsonData = JSON.parse(fileContent);
+      latestWeeklyData = jsonData;
+      res.json(jsonData);
     } else {
-      res.json(require("../routines/template/weekly.json"));
+      const templateFilePath = getTemplateFilePath();
+      const templateContent = await fs.readFile(templateFilePath, "utf-8");
+      const templateJson = JSON.parse(templateContent);
+      res.json(templateJson);
     }
   } catch (error) {
     console.log("Error:", error);
@@ -44,16 +58,38 @@ router.post("/", async function (req, res, next) {
   }
 });
 
-router.get("/", async function (req, res, next) {
+router.post("/", async function (req, res, next) {
   try {
     const today = new Date();
     const weeklyFilePath = getWeeklyFilePath(today);
 
-    if (latestWeeklyData) {
-      res.json(latestWeeklyData);
+    if (await fs.access(weeklyFilePath).catch(() => false)) {
+      // Om veckofilen redan finns, uppdatera den med inkommande data
+      const existingData = await fs.readFile(weeklyFilePath, "utf-8");
+      const existingJson = JSON.parse(existingData);
+
+      Object.assign(existingJson, req.body);
+      console.log("Reached this point in the code");
+
+      await fs.writeFile(weeklyFilePath, JSON.stringify(existingJson));
+      console.log("Successfully updated weekly file:", weeklyFilePath);
+      res.status(200).json({ success: true });
     } else {
-      const templateData = require("../routines/template/weekly.json");
-      res.json(templateData);
+      // Om veckofilen inte finns, använd template-filen
+      const templateFilePath = getTemplateFilePath();
+
+      if (await fs.access(templateFilePath).catch(() => false)) {
+        // Om template-filen finns, kopiera den till veckofilen
+        const templateData = await fs.readFile(templateFilePath, "utf-8");
+        const templateJson = JSON.parse(templateData);
+
+        await fs.writeFile(weeklyFilePath, JSON.stringify(templateJson));
+        console.log("Successfully copied template to weekly:", weeklyFilePath);
+        res.status(200).json({ success: true });
+      } else {
+        // Om template-filen inte finns, skicka en felstatus
+        res.status(500).json({ error: "Template file not found" });
+      }
     }
   } catch (error) {
     console.log("Error:", error);
