@@ -21,26 +21,6 @@ function getWeeklyFilePath(date) {
   return path.join(__dirname, "..", "routines", "weekly", fileName);
 }
 
-function getTemplateFilePath(date) {
-  const fileName = `${date.toISOString().split("T")[0]}-weekly-${getWeek(
-    date
-  )}.json`;
-  return path.join(__dirname, "..", "routines", "template", "weekly.json");
-}
-
-async function readDataFromFilePath(filePath, res, today) {
-  try {
-    const fileContent = await fs.readFile(filePath, "utf-8");
-
-    const jsonData = JSON.parse(fileContent);
-    latestWeeklyData = jsonData;
-    res.json(jsonData);
-  } catch (error) {
-    console.log("Error parsing file content", error);
-    res.status(500).json({ error: "Failed to parse file content" });
-  }
-}
-
 router.post("/", async function (req, res, next) {
   try {
     const today = new Date();
