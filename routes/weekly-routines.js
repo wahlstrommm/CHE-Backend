@@ -36,18 +36,7 @@ router.post("/", async function (req, res, next) {
       console.log("Successfully updated weekly file:", weeklyFilePath);
       res.status(200).json({ success: true });
     } else {
-      const templateFilePath = getTemplateFilePath();
-
-      if (await fs.access(templateFilePath).catch(() => false)) {
-        const templateData = await fs.readFile(templateFilePath, "utf-8");
-        const templateJson = JSON.parse(templateData);
-
-        await fs.writeFile(weeklyFilePath, JSON.stringify(templateJson));
-        console.log("Successfully copied template to weekly:", weeklyFilePath);
-        res.status(200).json({ success: true });
-      } else {
-        res.status(500).json({ error: "Template file not found" });
-      }
+      res.json(require("../routines/template/weekly.json"));
     }
   } catch (error) {
     console.log("Error:", error);
