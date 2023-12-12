@@ -48,8 +48,8 @@ router.get("/", function (req, res, next) {
           .json({ error: "Failed to parse template file content" });
       }
     } else {
-      // Filen för dagens datum finns inte i "template" heller, skicka innehållet från todo.json
-      res.json(require("../todo.json"));
+      // Filen för dagens datum finns inte i "template" heller, skicka innehållet från opening.json
+      res.json(require("../routines/template/opening.json"));
     }
   }
 });
