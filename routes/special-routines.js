@@ -42,7 +42,7 @@ router.get(
             .json({ error: "Failed to parse template file content" });
         }
       } else {
-        res.json(require("../special.json"));
+        res.json(require("../routines/template/special.json"));
       }
     }
   })
