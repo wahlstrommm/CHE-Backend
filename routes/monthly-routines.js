@@ -54,46 +54,93 @@ router.get("/", function (req, res, next) {
   }
 });
 
-router.post(
-  ("/",
-  function (req, res, next) {
-    var today = new Date();
+router.post("/", function (req, res, next) {
+  var updatedRoutines = req.body;
+  console.log(req.body);
+  // Skapa ett Date-objekt för dagens datum
+  var today = new Date();
 
-    var fileName =
-      today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
+  // Skapa ett filnamn med dagens datum
+  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
 
-    var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
-    var monthlyFilePath = path.join(monthlyFolderPath, fileName);
+  // Ange sökvägen till mappen "monthly"
+  var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
+  var monthlyFilePath = path.join(monthlyFolderPath, fileName);
 
-    var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
-    if (fs.existsSync(monthlyFilePath)) {
+  // Kontrollera om filen redan finns i "monthly"
+  if (fs.existsSync(monthlyFilePath)) {
+    // Konvertera tillbaka till JSON-sträng
+    const updatedJsonString = JSON.stringify({ Rutiner: updatedRoutines });
+
+    // Skriv till filen i "monthly"
+    fs.writeFile(monthlyFilePath, updatedJsonString, (err) => {
+      if (err) {
+        console.log("Error updating file", err);
+        res.status(500).json({ error: "Failed to update file" });
+      } else {
+        console.log("Successfully updated file:", monthlyFilePath);
+        res.status(200).json({ success: true });
+      }
+    });
+  } else {
+    // Filen finns inte i "monthly", så kolla i "template"
+    var templateFilePath = path.join(
+      __dirname,
+      "..",
+      "routines",
+      "template",
+      fileName
+    );
+
+    if (fs.existsSync(templateFilePath)) {
+      // Läs in den befintliga filens data i "template"
+      var templateExistingData = fs.readFileSync(templateFilePath, "utf-8");
+
       try {
-        var existingJson = JSON.parse(existingData);
-        Object.assign(existingJson, fillen);
-        const updatedJsonString = JSON.stringify(existingJson);
+        // Försök att konvertera den befintliga datan till ett JSON-objekt
+        var templateExistingJson = JSON.parse(templateExistingData);
 
-        fs.writeFile(monthlyFilePath, updatedJsonString, (err) => {
+        // Lägg till den nya informationen till den befintliga datan
+        Object.assign(templateExistingJson, { Rutiner: updatedRoutines });
+
+        // Konvertera tillbaka till JSON-sträng
+        const templateUpdatedJsonString = JSON.stringify(templateExistingJson);
+
+        // Skriv till filen i "template"
+        fs.writeFile(templateFilePath, templateUpdatedJsonString, (err) => {
           if (err) {
-            console.log("Error updating file", err);
-            res.status(500).json({ error: "Failed to update file" });
+            console.log("Error updating template file", err);
+            res.status(500).json({
+              error: "Failed to update template file",
+            });
           } else {
-            console.log("Successfully updated file:", specialFilePath);
+            console.log(
+              "Successfully updated template file:",
+              templateFilePath
+            );
             res.status(200).json({ success: true });
           }
         });
       } catch (error) {
-        console.log("Error parsing existing file data", error);
-        res.status(500).json({ error: "Failed to parse existing file data" });
+        console.log("Error parsing template existing file data", error);
+        res.status(500).json({
+          error: "Failed to parse template existing file data",
+        });
       }
     } else {
-      var templateFilePath = path.join(
-        __dirname,
-        "..",
-        "routines",
-        "template",
-        fileName
-      );
+      // Filen finns inte i "template" heller, skapa en ny fil i "monthly"
+      const jsonString = JSON.stringify({ Rutiner: updatedRoutines });
+      fs.writeFile(monthlyFilePath, jsonString, (err) => {
+        if (err) {
+          console.log("Error writing file", err);
+          res.status(500).json({ error: "Failed to write file" });
+        } else {
+          console.log("Successfully wrote new file:", monthlyFilePath);
+          res.status(200).json({ success: true });
+        }
+      });
     }
-  })
-);
+  }
+});
+
 module.exports = router;
