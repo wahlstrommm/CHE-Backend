@@ -3,54 +3,56 @@ var router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
-router.get(
-  ("/",
-  function (req, res, next) {
-    var today = new Date();
-    var fileName =
-      today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
+router.get("/", function (req, res, next) {
+  var today = new Date();
+  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
 
-    // Ange sökvägen till mappen "Monthly"
-    var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
-    var monthlyFilePath = path.join(monthlyFolderPath, fileName);
+  // Ange sökvägen till mappen "monthly"
+  var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
+  var monthlyFilePath = path.join(monthlyFolderPath, fileName);
 
-    if (fs.existsSync(monthlyFilePath)) {
-      var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
-
+  // Kontrollera om filen för dagens datum finns i "monthly"
+  if (fs.existsSync(monthlyFilePath)) {
+    // Läs innehållet från den befintliga filen i "monthly"
+    var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
+    try {
+      // Försök att konvertera filens innehåll till ett JSON-objekt
+      var jsonData = JSON.parse(fileContent);
+      console.log(jsonData);
+      res.json(jsonData);
+    } catch (error) {
+      console.log("Error parsing file content", error);
+      res.status(500).json({ error: "Failed to parse file content" });
+    }
+  } else {
+    // Filen för dagens datum finns inte i "monthly", hämta från "template"
+    var templateFilePath = path.join(
+      __dirname,
+      "..",
+      "routines",
+      "template",
+      fileName
+    );
+    console.log(templateFilePath);
+    if (fs.existsSync(templateFilePath)) {
+      // Läs innehållet från den befintliga filen i "template"
+      var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
       try {
-        var jsonData = JSON.parse(fileContent);
-        res.json(jsonData);
-        // Lägg till den nya informationen till den befintliga datan
+        // Försök att konvertera filens innehåll till ett JSON-objekt
+        var templateJsonData = JSON.parse(templateFileContent);
+        res.json(templateJsonData);
       } catch (error) {
-        console.log("Error parsing file content", error);
-        res.status(500).json({ error: "Failed to parse file content" });
+        console.log("Error parsing template file content", error);
+        res
+          .status(500)
+          .json({ error: "Failed to parse template file content" });
       }
     } else {
-      var templateFilePath = path.join(
-        __dirname,
-        "..",
-        "routines",
-        "template",
-        fileName
-      );
-      console.log(templateFilePath);
-      if (fs.existsSync(templateFilePath)) {
-        var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
-        try {
-          var templateJsonData = JSON.parse(templateFileContent);
-          res.json(templateJsonData);
-        } catch (error) {
-          console.log("Error parsing template file content", error);
-          res
-            .status(500)
-            .json({ error: "Failed to parse template file content" });
-        }
-      } else {
-        res.json(require("../routines/template/monthly.json"));
-      }
+      // Filen för dagens datum finns inte i "template" heller, skicka innehållet från monthly.json
+      res.json(require("../routines/template/monthly.json"));
     }
-  })
-);
+  }
+});
 
 router.post(
   ("/",
