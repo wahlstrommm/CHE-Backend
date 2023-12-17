@@ -5,13 +5,15 @@ const path = require("path");
 
 router.get("/", function (req, res, next) {
   var today = new Date();
-  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+  // Skapa ett filnamn med månad och år
+  var fileName =
+    today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
   var monthlyFilePath = path.join(monthlyFolderPath, fileName);
 
-  // Kontrollera om filen för dagens datum finns i "monthly"
+  // Kontrollera om filen för månades datum finns i "monthly"
   if (fs.existsSync(monthlyFilePath)) {
     // Läs innehållet från den befintliga filen i "monthly"
     var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
@@ -25,7 +27,7 @@ router.get("/", function (req, res, next) {
       res.status(500).json({ error: "Failed to parse file content" });
     }
   } else {
-    // Filen för dagens datum finns inte i "monthly", hämta från "template"
+    // Filen för månades datum finns inte i "monthly", hämta från "template"
     var templateFilePath = path.join(
       __dirname,
       "..",
@@ -48,7 +50,7 @@ router.get("/", function (req, res, next) {
           .json({ error: "Failed to parse template file content" });
       }
     } else {
-      // Filen för dagens datum finns inte i "template" heller, skicka innehållet från monthly.json
+      // Filen för månadens datum finns inte i "template" heller, skicka innehållet från monthly.json
       res.json(require("../routines/template/monthly.json"));
     }
   }
@@ -60,8 +62,9 @@ router.post("/", function (req, res, next) {
   // Skapa ett Date-objekt för dagens datum
   var today = new Date();
 
-  // Skapa ett filnamn med dagens datum
-  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+  // Skapa ett filnamn med månad och år
+  var fileName =
+    today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
