@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs").promises;
+const fs = require("fs").promises; // Use promise-based fs methods
 const path = require("path");
-
-let latestWeeklyData = null;
+const deepmerge = require("deepmerge");
 
 function getWeek(date) {
   const d = new Date(date);
@@ -24,33 +23,61 @@ function getTemplateFilePath() {
   return path.join(__dirname, "..", "routines", "template", "weekly.json");
 }
 
-async function readDataFromFilePath(filePath, res, today) {
+async function readJsonFromFile(filePath) {
   try {
     const fileContent = await fs.readFile(filePath, "utf-8");
-    const jsonData = JSON.parse(fileContent);
-    latestWeeklyData = jsonData;
-    res.json(jsonData);
+    return JSON.parse(fileContent);
   } catch (error) {
     console.log("Error parsing file content", error);
-    res.status(500).json({ error: "Failed to parse file content" });
+    throw new Error("Failed to parse file content");
+  }
+}
+
+async function writeJsonToFile(filePath, jsonData) {
+  try {
+    await fs.writeFile(filePath, JSON.stringify(jsonData));
+    console.log("Successfully updated file:", filePath);
+  } catch (error) {
+    console.log("Error writing to file", error);
+    throw new Error("Failed to write to file");
   }
 }
 
 router.get("/", async function (req, res, next) {
   try {
     const today = new Date();
-    const weeklyFilePath = getWeeklyFilePath(today);
+    const fileName = today.toISOString().split("T")[0] + "-weekly" + ".json";
+    const weeklyFolderPath = path.join(__dirname, "..", "routines", "weekly");
+    const weeklyFilePath = path.join(weeklyFolderPath, fileName);
 
-    if (await fs.access(weeklyFilePath).catch(() => false)) {
+    console.log("Today:", today);
+    console.log("Weekly File Path:", weeklyFilePath);
+
+    try {
+      // Use fs.promises.access for checking file existence
+      await fs.access(weeklyFilePath);
       const fileContent = await fs.readFile(weeklyFilePath, "utf-8");
       const jsonData = JSON.parse(fileContent);
-      latestWeeklyData = jsonData;
       res.json(jsonData);
-    } else {
-      const templateFilePath = getTemplateFilePath();
-      const templateContent = await fs.readFile(templateFilePath, "utf-8");
-      const templateJson = JSON.parse(templateContent);
-      res.json(templateJson);
+    } catch (error) {
+      // Handle file not found error
+      if (error.code === "ENOENT") {
+        const templateFilePath = path.join(
+          __dirname,
+          "..",
+          "routines",
+          "template",
+          fileName
+        );
+        const templateFileContent = await fs.readFile(
+          templateFilePath,
+          "utf-8"
+        );
+        const templateJsonData = JSON.parse(templateFileContent);
+        res.json(templateJsonData);
+      } else {
+        throw error; // Propagate other errors
+      }
     }
   } catch (error) {
     console.log("Error:", error);
@@ -63,34 +90,26 @@ router.post("/", async function (req, res, next) {
     const today = new Date();
     const weeklyFilePath = getWeeklyFilePath(today);
 
-    if (await fs.access(weeklyFilePath).catch(() => false)) {
-      // Om veckofilen redan finns, uppdatera den med inkommande data
-      const existingData = await fs.readFile(weeklyFilePath, "utf-8");
-      const existingJson = JSON.parse(existingData);
+    let jsonData;
 
-      Object.assign(existingJson, req.body);
-      console.log("Reached this point in the code");
-
-      await fs.writeFile(weeklyFilePath, JSON.stringify(existingJson));
-      console.log("Successfully updated weekly file:", weeklyFilePath);
-      res.status(200).json({ success: true });
-    } else {
-      // Om veckofilen inte finns, använd template-filen
-      const templateFilePath = getTemplateFilePath();
-
-      if (await fs.access(templateFilePath).catch(() => false)) {
-        // Om template-filen finns, kopiera den till veckofilen
-        const templateData = await fs.readFile(templateFilePath, "utf-8");
-        const templateJson = JSON.parse(templateData);
-
-        await fs.writeFile(weeklyFilePath, JSON.stringify(templateJson));
-        console.log("Successfully copied template to weekly:", weeklyFilePath);
-        res.status(200).json({ success: true });
+    try {
+      // Use fs.promises.access for checking file existence
+      await fs.access(weeklyFilePath);
+      const existingData = await readJsonFromFile(weeklyFilePath);
+      jsonData = deepmerge(existingData, req.body, {
+        arrayMerge: (d, s, o) => s,
+      });
+    } catch (error) {
+      // Handle file not found error
+      if (error.code === "ENOENT") {
+        jsonData = req.body;
       } else {
-        // Om template-filen inte finns, skicka en felstatus
-        res.status(500).json({ error: "Template file not found" });
+        throw error; // Propagate other errors
       }
     }
+
+    await writeJsonToFile(weeklyFilePath, jsonData);
+    res.status(200).json({ success: true });
   } catch (error) {
     console.log("Error:", error);
     res.status(500).json({ error: "Internal server error" });
