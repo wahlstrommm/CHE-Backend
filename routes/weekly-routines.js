@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs").promises; // Use promise-based fs methods
+const fs = require("fs").promises;
 const path = require("path");
 const deepmerge = require("deepmerge");
 
@@ -46,38 +46,16 @@ async function writeJsonToFile(filePath, jsonData) {
 router.get("/", async function (req, res, next) {
   try {
     const today = new Date();
-    const fileName = today.toISOString().split("T")[0] + "-weekly" + ".json";
-    const weeklyFolderPath = path.join(__dirname, "..", "routines", "weekly");
-    const weeklyFilePath = path.join(weeklyFolderPath, fileName);
+    const weeklyFilePath = getWeeklyFilePath(today);
+    let latestWeeklyData;
 
-    console.log("Today:", today);
-    console.log("Weekly File Path:", weeklyFilePath);
-
-    try {
-      // Use fs.promises.access for checking file existence
-      await fs.access(weeklyFilePath);
-      const fileContent = await fs.readFile(weeklyFilePath, "utf-8");
-      const jsonData = JSON.parse(fileContent);
-      res.json(jsonData);
-    } catch (error) {
-      // Handle file not found error
-      if (error.code === "ENOENT") {
-        const templateFilePath = path.join(
-          __dirname,
-          "..",
-          "routines",
-          "template",
-          fileName
-        );
-        const templateFileContent = await fs.readFile(
-          templateFilePath,
-          "utf-8"
-        );
-        const templateJsonData = JSON.parse(templateFileContent);
-        res.json(templateJsonData);
-      } else {
-        throw error; // Propagate other errors
-      }
+    if (await fs.access(weeklyFilePath).catch(() => false)) {
+      latestWeeklyData = await readJsonFromFile(weeklyFilePath);
+      res.json(latestWeeklyData);
+    } else {
+      const templateFilePath = getTemplateFilePath();
+      latestWeeklyData = await readJsonFromFile(templateFilePath);
+      res.json(latestWeeklyData);
     }
   } catch (error) {
     console.log("Error:", error);
@@ -92,20 +70,11 @@ router.post("/", async function (req, res, next) {
 
     let jsonData;
 
-    try {
-      // Use fs.promises.access for checking file existence
-      await fs.access(weeklyFilePath);
+    if (await fs.access(weeklyFilePath).catch(() => false)) {
       const existingData = await readJsonFromFile(weeklyFilePath);
-      jsonData = deepmerge(existingData, req.body, {
-        arrayMerge: (d, s, o) => s,
-      });
-    } catch (error) {
-      // Handle file not found error
-      if (error.code === "ENOENT") {
-        jsonData = req.body;
-      } else {
-        throw error; // Propagate other errors
-      }
+      jsonData = deepmerge(existingData, req.body, { arrayMerge: (d, s, o) => s });
+    } else {
+      jsonData = req.body;
     }
 
     await writeJsonToFile(weeklyFilePath, jsonData);
