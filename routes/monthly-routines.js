@@ -13,7 +13,7 @@ router.get("/", function (req, res, next) {
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
   var monthlyFilePath = path.join(monthlyFolderPath, fileName);
 
-  // Kontrollera om filen för dagens datum finns i "monthly"
+  // Kontrollera om filen för månades datum finns i "monthly"
   if (fs.existsSync(monthlyFilePath)) {
     // Läs innehållet från den befintliga filen i "monthly"
     var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
@@ -27,7 +27,7 @@ router.get("/", function (req, res, next) {
       res.status(500).json({ error: "Failed to parse file content" });
     }
   } else {
-    // Filen för dagens datum finns inte i "monthly", hämta från "template"
+    // Filen för månades datum finns inte i "monthly", hämta från "template"
     var templateFilePath = path.join(
       __dirname,
       "..",
@@ -50,7 +50,7 @@ router.get("/", function (req, res, next) {
           .json({ error: "Failed to parse template file content" });
       }
     } else {
-      // Filen för dagens datum finns inte i "template" heller, skicka innehållet från monthly.json
+      // Filen för månadens datum finns inte i "template" heller, skicka innehållet från monthly.json
       res.json(require("../routines/template/monthly.json"));
     }
   }
