@@ -5,7 +5,9 @@ const path = require("path");
 
 router.get("/", function (req, res, next) {
   var today = new Date();
-  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+  // Skapa ett filnamn med månad och år
+  var fileName =
+    today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
@@ -60,8 +62,9 @@ router.post("/", function (req, res, next) {
   // Skapa ett Date-objekt för dagens datum
   var today = new Date();
 
-  // Skapa ett filnamn med dagens datum
-  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+  // Skapa ett filnamn med månad och år
+  var fileName =
+    today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
