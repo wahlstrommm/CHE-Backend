@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs").promises;
 const path = require("path");
-
-let latestWeeklyData = null;
+const deepmerge = require("deepmerge");
 
 function getWeek(date) {
   const d = new Date(date);
@@ -24,15 +23,23 @@ function getTemplateFilePath() {
   return path.join(__dirname, "..", "routines", "template", "weekly.json");
 }
 
-async function readDataFromFilePath(filePath, res, today) {
+async function readJsonFromFile(filePath) {
   try {
     const fileContent = await fs.readFile(filePath, "utf-8");
-    const jsonData = JSON.parse(fileContent);
-    latestWeeklyData = jsonData;
-    res.json(jsonData);
+    return JSON.parse(fileContent);
   } catch (error) {
     console.log("Error parsing file content", error);
-    res.status(500).json({ error: "Failed to parse file content" });
+    throw new Error("Failed to parse file content");
+  }
+}
+
+async function writeJsonToFile(filePath, jsonData) {
+  try {
+    await fs.writeFile(filePath, JSON.stringify(jsonData));
+    console.log("Successfully updated file:", filePath);
+  } catch (error) {
+    console.log("Error writing to file", error);
+    throw new Error("Failed to write to file");
   }
 }
 
@@ -40,17 +47,15 @@ router.get("/", async function (req, res, next) {
   try {
     const today = new Date();
     const weeklyFilePath = getWeeklyFilePath(today);
+    let latestWeeklyData;
 
     if (await fs.access(weeklyFilePath).catch(() => false)) {
-      const fileContent = await fs.readFile(weeklyFilePath, "utf-8");
-      const jsonData = JSON.parse(fileContent);
-      latestWeeklyData = jsonData;
-      res.json(jsonData);
+      latestWeeklyData = await readJsonFromFile(weeklyFilePath);
+      res.json(latestWeeklyData);
     } else {
       const templateFilePath = getTemplateFilePath();
-      const templateContent = await fs.readFile(templateFilePath, "utf-8");
-      const templateJson = JSON.parse(templateContent);
-      res.json(templateJson);
+      latestWeeklyData = await readJsonFromFile(templateFilePath);
+      res.json(latestWeeklyData);
     }
   } catch (error) {
     console.log("Error:", error);
@@ -58,39 +63,25 @@ router.get("/", async function (req, res, next) {
   }
 });
 
+//! Need to looking in to the post and whats causing it to one update ones
 router.post("/", async function (req, res, next) {
   try {
     const today = new Date();
     const weeklyFilePath = getWeeklyFilePath(today);
 
+    let jsonData;
+
     if (await fs.access(weeklyFilePath).catch(() => false)) {
-      // Om veckofilen redan finns, uppdatera den med inkommande data
-      const existingData = await fs.readFile(weeklyFilePath, "utf-8");
-      const existingJson = JSON.parse(existingData);
-
-      Object.assign(existingJson, req.body);
-      console.log("Reached this point in the code");
-
-      await fs.writeFile(weeklyFilePath, JSON.stringify(existingJson));
-      console.log("Successfully updated weekly file:", weeklyFilePath);
-      res.status(200).json({ success: true });
+      const existingData = await readJsonFromFile(weeklyFilePath);
+      jsonData = deepmerge(existingData, req.body, {
+        arrayMerge: (d, s, o) => s,
+      });
     } else {
-      // Om veckofilen inte finns, använd template-filen
-      const templateFilePath = getTemplateFilePath();
-
-      if (await fs.access(templateFilePath).catch(() => false)) {
-        // Om template-filen finns, kopiera den till veckofilen
-        const templateData = await fs.readFile(templateFilePath, "utf-8");
-        const templateJson = JSON.parse(templateData);
-
-        await fs.writeFile(weeklyFilePath, JSON.stringify(templateJson));
-        console.log("Successfully copied template to weekly:", weeklyFilePath);
-        res.status(200).json({ success: true });
-      } else {
-        // Om template-filen inte finns, skicka en felstatus
-        res.status(500).json({ error: "Template file not found" });
-      }
+      jsonData = req.body;
     }
+
+    await writeJsonToFile(weeklyFilePath, jsonData);
+    res.status(200).json({ success: true });
   } catch (error) {
     console.log("Error:", error);
     res.status(500).json({ error: "Internal server error" });
