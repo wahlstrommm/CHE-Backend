@@ -63,6 +63,7 @@ router.get("/", async function (req, res, next) {
   }
 });
 
+//! Need to looking in to the post and whats causing it to one update ones
 router.post("/", async function (req, res, next) {
   try {
     const today = new Date();
@@ -72,7 +73,9 @@ router.post("/", async function (req, res, next) {
 
     if (await fs.access(weeklyFilePath).catch(() => false)) {
       const existingData = await readJsonFromFile(weeklyFilePath);
-      jsonData = deepmerge(existingData, req.body, { arrayMerge: (d, s, o) => s });
+      jsonData = deepmerge(existingData, req.body, {
+        arrayMerge: (d, s, o) => s,
+      });
     } else {
       jsonData = req.body;
     }
