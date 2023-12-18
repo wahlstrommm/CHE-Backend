@@ -42,7 +42,7 @@ async function writeJsonToFile(filePath, jsonData) {
     throw new Error("Failed to write to file");
   }
 }
-
+//! pick this one out later on
 router.get("/", async function (req, res, next) {
   try {
     const today = new Date();
