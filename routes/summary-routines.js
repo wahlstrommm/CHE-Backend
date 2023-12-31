@@ -49,21 +49,27 @@ router.get("/", function (req, res, next) {
     });
 
     // Organize routines by month > week > day
-    var organizedRoutines = {};
+    var organizedRoutines = [];
 
     allRoutines.forEach((routine) => {
       var month = routine.month; // Replace with the actual property for month
       var week = routine.week; // Replace with the actual property for week
 
-      if (!organizedRoutines[month]) {
-        organizedRoutines[month] = {};
+      var existingMonth = organizedRoutines.find((m) => m.month === month);
+
+      if (!existingMonth) {
+        existingMonth = { month, weeks: [] };
+        organizedRoutines.push(existingMonth);
       }
 
-      if (!organizedRoutines[month][week]) {
-        organizedRoutines[month][week] = [];
+      var existingWeek = existingMonth.weeks.find((w) => w.week === week);
+
+      if (!existingWeek) {
+        existingWeek = { week, days: [] };
+        existingMonth.weeks.push(existingWeek);
       }
 
-      organizedRoutines[month][week].push(routine);
+      existingWeek.days.push(routine);
     });
 
     // Write organized routines to a JSON file
