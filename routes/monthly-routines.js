@@ -59,8 +59,9 @@ router.post("/", function (req, res, next) {
   // Skapa ett Date-objekt för dagens datum
   var today = new Date();
 
-  // Skapa ett filnamn med dagens datum
-  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
+  // Skapa ett filnamn med månadens nummer och år
+  var fileName =
+    today.getFullYear() + "-" + (today.getMonth() + 1) + "-monthly" + ".json";
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
