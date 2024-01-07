@@ -4,14 +4,19 @@ const fs = require("fs");
 const path = require("path");
 
 router.get("/", function (req, res, next) {
+  // Skapa ett Date-objekt för dagens datum
   var today = new Date();
-  var fileName = today.toISOString().split("T")[0] + "-monthly" + ".json";
-  console.log(fileName);
+
+  // Skapa ett filnamn med månadens nummer och år
+  var fileName =
+    today.getFullYear() + "-" + (today.getMonth() + 1) + "-monthly" + ".json";
+  console.log("FileName:", fileName);
+
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
   var monthlyFilePath = path.join(monthlyFolderPath, fileName);
 
-  // Kontrollera om filen för dagens datum finns i "monthly"
+  // Kontrollera om filen för aktuell månad finns i "monthly"
   if (fs.existsSync(monthlyFilePath)) {
     // Läs innehållet från den befintliga filen i "monthly"
     var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
@@ -24,17 +29,18 @@ router.get("/", function (req, res, next) {
       res.status(500).json({ error: "Failed to parse file content" });
     }
   } else {
-    // Filen för dagens datum finns inte i "monthly", hämta från "template"
+    // Filen för aktuell månad finns inte i "monthly", hämta från "template"
+    var templateFileName = "template-monthly.json"; // Ange namnet på din mallfil för månaden
     var templateFilePath = path.join(
       __dirname,
       "..",
       "routines",
       "template",
-      fileName
+      templateFileName
     );
 
     if (fs.existsSync(templateFilePath)) {
-      // Läs innehållet från den befintliga filen i "template"
+      // Läs innehållet från den befintliga mallfilen i "template"
       var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
       try {
         // Försök att konvertera filens innehåll till ett JSON-objekt
@@ -47,8 +53,9 @@ router.get("/", function (req, res, next) {
           .json({ error: "Failed to parse template file content" });
       }
     } else {
-      // Filen för dagens datum finns inte i "template" heller, skicka innehållet från monthly.json
-      res.json(require("../routines/template/monthly.json"));
+      // Mallfilen för aktuell månad finns inte, skicka innehållet från en standardmall (om sådan finns)
+      console.log("Template file not found");
+      res.status(404).json({ error: "Template file not found" });
     }
   }
 });
