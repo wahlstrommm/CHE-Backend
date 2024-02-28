@@ -8,13 +8,13 @@ router.get("/", function (req, res, next) {
   var fileName = today.toISOString().split("T")[0] + "-special" + ".json";
 
   // Ange sökvägen till mappen "opening"
-  var openingFolderPath = path.join(__dirname, "..", "routines", "opening");
-  var openingFilePath = path.join(openingFolderPath, fileName);
+  var specialFolderPath = path.join(__dirname, "..", "routines", "special");
+  var specialFilePath = path.join(openingFolderPath, fileName);
 
   // Kontrollera om filen för dagens datum finns i "opening"
-  if (fs.existsSync(openingFilePath)) {
+  if (fs.existsSync(specialFilePath)) {
     // Läs innehållet från den befintliga filen i "opening"
-    var fileContent = fs.readFileSync(openingFilePath, "utf-8");
+    var fileContent = fs.readFileSync(specialFilePath, "utf-8");
     try {
       // Försök att konvertera filens innehåll till ett JSON-objekt
       var jsonData = JSON.parse(fileContent);
@@ -61,11 +61,11 @@ router.post(
 
     var fileName = today.toISOString().split("T")[0] + "-special" + ".json";
 
-    // Ange sökvägen till mappen "opening"
+    // Ange sökvägen till mappen "special"
     var specialFolderPath = path.join(__dirname, "..", "routines", "special");
     var specialFilePath = path.join(specialFolderPath, fileName);
 
-    var existingData = fs.readFileSync(openingFilePath, "utf-8");
+    var existingData = fs.readFileSync(specialFilePath, "utf-8");
     if (fs.existsSync(specialFilePath)) {
       try {
         // Försök att konvertera den befintliga datan till ett JSON-objekt
@@ -77,7 +77,7 @@ router.post(
         // Konvertera tillbaka till JSON-sträng
         const updatedJsonString = JSON.stringify(existingJson);
 
-        // Skriv till filen i "opening"
+        // Skriv till filen i "special"
         fs.writeFile(specialFilePath, updatedJsonString, (err) => {
           if (err) {
             console.log("Error updating file", err);

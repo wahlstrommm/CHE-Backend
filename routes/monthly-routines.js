@@ -4,40 +4,43 @@ const fs = require("fs");
 const path = require("path");
 
 router.get("/", function (req, res, next) {
+  // Skapa ett Date-objekt för dagens datum
   var today = new Date();
-  // Skapa ett filnamn med månad och år
+
+  // Skapa ett filnamn med månadens nummer och år
   var fileName =
-    today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
+    today.getFullYear() + "-" + (today.getMonth() + 1) + "-monthly" + ".json";
+  console.log("FileName:", fileName);
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
   var monthlyFilePath = path.join(monthlyFolderPath, fileName);
 
-  // Kontrollera om filen för månades datum finns i "monthly"
+  // Kontrollera om filen för aktuell månad finns i "monthly"
   if (fs.existsSync(monthlyFilePath)) {
     // Läs innehållet från den befintliga filen i "monthly"
     var fileContent = fs.readFileSync(monthlyFilePath, "utf-8");
     try {
       // Försök att konvertera filens innehåll till ett JSON-objekt
       var jsonData = JSON.parse(fileContent);
-      console.log(jsonData);
       res.json(jsonData);
     } catch (error) {
       console.log("Error parsing file content", error);
       res.status(500).json({ error: "Failed to parse file content" });
     }
   } else {
-    // Filen för månades datum finns inte i "monthly", hämta från "template"
+    // Filen för aktuell månad finns inte i "monthly", hämta från "template"
+    var templateFileName = "template-monthly.json"; // Ange namnet på din mallfil för månaden
     var templateFilePath = path.join(
       __dirname,
       "..",
       "routines",
       "template",
-      fileName
+      templateFileName
     );
-    console.log(templateFilePath);
+
     if (fs.existsSync(templateFilePath)) {
-      // Läs innehållet från den befintliga filen i "template"
+      // Läs innehållet från den befintliga mallfilen i "template"
       var templateFileContent = fs.readFileSync(templateFilePath, "utf-8");
       try {
         // Försök att konvertera filens innehåll till ett JSON-objekt
@@ -50,21 +53,22 @@ router.get("/", function (req, res, next) {
           .json({ error: "Failed to parse template file content" });
       }
     } else {
-      // Filen för månadens datum finns inte i "template" heller, skicka innehållet från monthly.json
-      res.json(require("../routines/template/monthly.json"));
+      // Mallfilen för aktuell månad finns inte, skicka innehållet från en standardmall (om sådan finns)
+      console.log("Template file not found");
+      res.status(404).json({ error: "Template file not found" });
     }
   }
 });
 
 router.post("/", function (req, res, next) {
-  var updatedRoutines = req.body;
-  console.log(req.body);
+  var fillen = req.body;
+  console.log(fillen);
   // Skapa ett Date-objekt för dagens datum
   var today = new Date();
 
-  // Skapa ett filnamn med månad och år
+  // Skapa ett filnamn med månadens nummer och år
   var fileName =
-    today.toISOString().split("T")[0].slice(0, 7) + "-monthly" + ".json";
+    today.getFullYear() + "-" + (today.getMonth() + 1) + "-monthly" + ".json";
 
   // Ange sökvägen till mappen "monthly"
   var monthlyFolderPath = path.join(__dirname, "..", "routines", "monthly");
@@ -72,19 +76,33 @@ router.post("/", function (req, res, next) {
 
   // Kontrollera om filen redan finns i "monthly"
   if (fs.existsSync(monthlyFilePath)) {
-    // Konvertera tillbaka till JSON-sträng
-    const updatedJsonString = JSON.stringify({ Rutiner: updatedRoutines });
+    // Läs in den befintliga filens data i "monthly"
+    var existingData = fs.readFileSync(monthlyFilePath, "utf-8");
 
-    // Skriv till filen i "monthly"
-    fs.writeFile(monthlyFilePath, updatedJsonString, (err) => {
-      if (err) {
-        console.log("Error updating file", err);
-        res.status(500).json({ error: "Failed to update file" });
-      } else {
-        console.log("Successfully updated file:", monthlyFilePath);
-        res.status(200).json({ success: true });
-      }
-    });
+    try {
+      // Försök att konvertera den befintliga datan till ett JSON-objekt
+      var existingJson = JSON.parse(existingData);
+
+      // Lägg till den nya informationen till den befintliga datan
+      Object.assign(existingJson, fillen);
+
+      // Konvertera tillbaka till JSON-sträng
+      const updatedJsonString = JSON.stringify(existingJson);
+
+      // Skriv till filen i "monthly"
+      fs.writeFile(monthlyFilePath, updatedJsonString, (err) => {
+        if (err) {
+          console.log("Error updating file", err);
+          res.status(500).json({ error: "Failed to update file" });
+        } else {
+          console.log("Successfully updated file:", monthlyFilePath);
+          res.status(200).json({ success: true });
+        }
+      });
+    } catch (error) {
+      console.log("Error parsing existing file data", error);
+      res.status(500).json({ error: "Failed to parse existing file data" });
+    }
   } else {
     // Filen finns inte i "monthly", så kolla i "template"
     var templateFilePath = path.join(
@@ -104,7 +122,7 @@ router.post("/", function (req, res, next) {
         var templateExistingJson = JSON.parse(templateExistingData);
 
         // Lägg till den nya informationen till den befintliga datan
-        Object.assign(templateExistingJson, { Rutiner: updatedRoutines });
+        Object.assign(templateExistingJson, fillen);
 
         // Konvertera tillbaka till JSON-sträng
         const templateUpdatedJsonString = JSON.stringify(templateExistingJson);
@@ -113,9 +131,7 @@ router.post("/", function (req, res, next) {
         fs.writeFile(templateFilePath, templateUpdatedJsonString, (err) => {
           if (err) {
             console.log("Error updating template file", err);
-            res.status(500).json({
-              error: "Failed to update template file",
-            });
+            res.status(500).json({ error: "Failed to update template file" });
           } else {
             console.log(
               "Successfully updated template file:",
@@ -126,13 +142,13 @@ router.post("/", function (req, res, next) {
         });
       } catch (error) {
         console.log("Error parsing template existing file data", error);
-        res.status(500).json({
-          error: "Failed to parse template existing file data",
-        });
+        res
+          .status(500)
+          .json({ error: "Failed to parse template existing file data" });
       }
     } else {
       // Filen finns inte i "template" heller, skapa en ny fil i "monthly"
-      const jsonString = JSON.stringify({ Rutiner: updatedRoutines });
+      const jsonString = JSON.stringify(fillen);
       fs.writeFile(monthlyFilePath, jsonString, (err) => {
         if (err) {
           console.log("Error writing file", err);
